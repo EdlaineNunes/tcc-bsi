@@ -22,7 +22,6 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestParam String email, @RequestParam String senha) {
-        //todo encriptar senha
         return ResponseEntity.ok(authService.authenticate(email, senha));
     }
 }

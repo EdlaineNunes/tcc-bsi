@@ -3,23 +3,21 @@ package com.tcc.edlaine.crosscutting.utils;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
 
+@Slf4j
 @Component
 public class JwtTokenProvider {
 
-//    private final String SECRET_KEY = "secrect-key"; // Utilize uma chave secreta segura em produção
-//    private final long EXPIRATION_TIME = 864_000_000; // 10 dias em milissegundos
-
-    private static final String SECRET_KEY = "abcdefghijklmnopqrstuvxyz123456789012"; // 32 caracteres
+    private static final String SECRET_KEY = "abcdefghijklmnopqrstuvxyz123456789012";
     private final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
 
 
-    // Gera um token JWT
-    public String generateToken(String email, Key key) {
+    public String generateToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
@@ -28,7 +26,6 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // Valida o token JWT
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -37,12 +34,11 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token);
             return true;
         } catch (Exception e) {
-            return false;
+            throw new RuntimeException("Invalid token. Error: " + e.getMessage());
         }
     }
 
-    // Extrai o username do token JWT
-    public String getUsernameFromToken(String token) {
+    public String getUserFromToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
