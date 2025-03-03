@@ -1,0 +1,85 @@
+🔥 O que esta API é capaz de fazer até agora? 🔥
+Atualmente, sua API permite:
+
+✅ Gerenciamento de Usuários (com JWT)
+✔ Criar contas de usuários (registro)
+✔ Fazer login e obter um token JWT
+✔ Autenticar requisições com esse token JWT
+
+✅ Upload e Download de Arquivos
+✔ Enviar qualquer tipo de arquivo (PDF, DOCX, XLSX, imagens, etc.) para o MongoDB (via GridFS)
+✔ Preservar imagens, tabelas, links e formatação dos documentos
+✔ Fazer o download do arquivo exatamente como foi enviado
+
+✅ Relacionamento do Arquivo com Usuário
+✔ O usuário autenticado é salvo junto ao arquivo que enviou
+✔ Cada usuário só pode ver seus próprios arquivos
+
+✅ Versionamento de Arquivos
+✔ Cada novo upload do mesmo arquivo gera uma nova versão
+✔ O histórico de versões é armazenado com data e hora
+✔ O usuário pode ver todas as versões do seu documento
+
+✅ Listagem e Gerenciamento de Arquivos
+✔ O usuário pode listar os arquivos que enviou
+✔ O usuário pode ver todas as versões de um arquivo
+✔ É possível remover arquivos, mantendo um registro no histórico
+
+------------------------ update
+Até agora, a API que construímos tem os seguintes recursos principais implementados:
+
+1. Upload de Arquivo
+Endpoint: POST /files/upload
+Função: Permite que o usuário logado envie arquivos para o sistema.
+O arquivo é salvo no GridFS do MongoDB.
+O documento também é registrado no banco de dados, com o ID do usuário que fez o upload.
+O sistema registra a primeira versão do arquivo no histórico de versões do documento.
+2. Compartilhamento de Documento
+Endpoint: POST /files/share/{documentId}
+Função: Permite que o usuário logado compartilhe um documento com outro usuário via e-mail.
+O documento é compartilhado com um e-mail, atribuindo a ele um nível de permissão.
+O nível de permissão pode ser leitura ou edição.
+Um e-mail é enviado ao usuário informado, notificando sobre o compartilhamento e o nível de permissão concedido.
+3. Listar Arquivos do Usuário
+Endpoint: GET /files/my-files
+Função: Retorna todos os documentos que o usuário logado fez o upload.
+O usuário só pode ver seus próprios arquivos (a menos que seja admin).
+4. Download de Arquivo
+Endpoint: GET /files/download/{id}
+Função: Permite que o usuário baixe um documento especificado pelo seu ID.
+Usuário Comum: Pode baixar qualquer arquivo.
+Admin: Pode baixar qualquer arquivo.
+Regras de Permissão: A verificação de permissões só restringe modificações (alteração e exclusão), não o download.
+5. Visualizar Histórico de Versões
+Endpoint: GET /files/file-versions/{documentId}
+Função: Permite que o usuário veja as versões anteriores de um documento.
+Usuário Comum: Só pode ver o histórico de versões dos documentos que ele fez o upload.
+Admin: Pode ver o histórico de qualquer documento.
+O histórico de versões é armazenado no banco de dados, e cada versão está ligada ao ID do arquivo no GridFS.
+6. Baixar Versão Específica do Arquivo
+Endpoint: GET /files/download-version/{documentId}/{versionIndex}
+Função: Permite que o usuário baixe uma versão específica do arquivo.
+Usuário Comum: Só pode baixar versões de arquivos que ele fez o upload.
+Admin: Pode baixar qualquer versão de qualquer documento.
+A versão específica é recuperada do GridFS.
+7. Deletar Arquivo
+Endpoint: DELETE /files/delete/{id}
+Função: Permite que o usuário delete um documento do sistema.
+Usuário Comum: Só pode deletar documentos que ele fez o upload.
+Admin: Pode deletar qualquer documento.
+O arquivo é excluído do GridFS e o documento é removido do banco de dados.
+Regras de Permissões
+A API possui as seguintes regras de permissão:
+
+Usuário Comum:
+
+Pode baixar qualquer documento.
+Só pode alterar (fazer upload de novas versões) e ver o histórico de versões de documentos que fez o upload.
+Não pode deletar ou alterar documentos de outros usuários.
+Admin:
+
+Tem permissões completas: pode baixar, alterar, ver o histórico e excluir qualquer documento.
+Pode compartilhar documentos e gerenciar permissões.
+
+-----------------------------update
+
