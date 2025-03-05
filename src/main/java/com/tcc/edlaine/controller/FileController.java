@@ -5,6 +5,7 @@ import com.tcc.edlaine.domain.entities.DocumentEntity;
 import com.tcc.edlaine.domain.entities.FileVersion;
 import com.tcc.edlaine.domain.entities.SharedRecord;
 import com.tcc.edlaine.service.FileService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -16,14 +17,11 @@ import java.util.List;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/files")
 public class FileController {
 
     private final FileService fileService;
-
-    public FileController(FileService fileService) {
-        this.fileService = fileService;
-    }
 
     @ResponseStatus(HttpStatus.OK)
     @PostMapping("/upload")
@@ -41,13 +39,13 @@ public class FileController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/share-history/{documentId}")
     public ResponseEntity<List<SharedRecord>> getShareHistory(@PathVariable String documentId) {
-        return fileService.getShareHistoryDocument(documentId);
+        return fileService.getShareHistory(documentId);
     }
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/my-files")
     public ResponseEntity<List<DocumentEntity>> getMyFiles() {
-        return fileService.getMyDocuments();
+        return fileService.getUserDocuments();
     }
 
     @ResponseStatus(HttpStatus.OK)
@@ -74,6 +72,7 @@ public class FileController {
         return fileService.downloadFileVersionByVersionIndex(documentId, versionIndex);
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/delete/{documentId}")
     public ResponseEntity<FileJson> deleteFile(@PathVariable String documentId) {
         return fileService.deleteDocumentById(documentId);

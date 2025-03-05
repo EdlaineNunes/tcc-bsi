@@ -3,6 +3,7 @@ package com.tcc.edlaine.crosscutting.config;
 import com.tcc.edlaine.crosscutting.utils.JwtAuthenticationFilter;
 import com.tcc.edlaine.crosscutting.utils.JwtTokenProvider;
 import com.tcc.edlaine.service.MyUserDetailsService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,15 +25,11 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final MyUserDetailsService myUserDetailsService;
-
-    public SecurityConfig(JwtTokenProvider jwtTokenProvider, MyUserDetailsService myUserDetailsService) {
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.myUserDetailsService = myUserDetailsService;
-    }
 
     @Bean
     public WebMvcConfigurer corsConfigurer() {
@@ -99,9 +96,6 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter(authenticationManager, jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class);
-
-//                .addFilterBefore(new JwtAuthenticationFilter(authenticationManager(http), jwtTokenProvider),
-//                        UsernamePasswordAuthenticationFilter.class); // Adicionando o filtro antes do filtro de autenticação padrão
         return http.build();
     }
 }
