@@ -51,10 +51,11 @@ public class AuthService implements UserDetailsService {
     }
 
     public String register(UserEntity user) {
+        String psw = user.getPassword();
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setPermissionLevel(PermissionLevel.GUEST);
         userRepository.save(user);
-        return authenticate(user.getEmail(), user.getPassword());
+        return authenticate(user.getEmail(), psw);
     }
 
     @Override
