@@ -1,6 +1,6 @@
 package com.tcc.edlaine.controller;
 
-import com.tcc.edlaine.domain.dto.UserEntity;
+import com.tcc.edlaine.domain.entities.UserEntity;
 import com.tcc.edlaine.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +21,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestParam String email, @RequestParam String senha) {
-        return ResponseEntity.ok(authService.authenticate(email, senha));
+    public ResponseEntity<String> login(@RequestParam String email, @RequestParam String password) {
+        return ResponseEntity.ok(authService.authenticate(email, password));
     }
 }

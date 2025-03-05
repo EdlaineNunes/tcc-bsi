@@ -1,4 +1,4 @@
-package com.tcc.edlaine.domain.dto;
+package com.tcc.edlaine.domain.entities;
 
 import com.tcc.edlaine.domain.enums.PermissionLevel;
 import lombok.Data;
@@ -13,7 +13,7 @@ public class UserEntity {
     private String username;
     private String cpf;
     private String email;
-    private String senha;
+    private String password;
     private PermissionLevel permissionLevel;
     private boolean active;
 }

@@ -1,4 +1,4 @@
-package com.tcc.edlaine.domain.dto;
+package com.tcc.edlaine.domain.entities;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tcc.edlaine.domain.enums.PermissionLevel;
@@ -22,13 +22,23 @@ public class DocumentEntity {
     @Id
     private String id;
     private String filename;
-    private String userId; // Quem fez o upload
+    private String customerEmail;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
     private List<FileVersion> versions = new ArrayList<>();
     private Map<String, PermissionLevel> sharedWith = new HashMap<>(); // E-mail do usuário -> Nível de permissão
 
     private List<SharedRecord> shareHistory = new ArrayList<>();
+
+    public DocumentEntity(String filename,
+                          String customerEmail,
+                          String fileId) {
+        this.filename = filename;
+        this.customerEmail = customerEmail;
+        this.createdAt = LocalDateTime.now();
+
+        addVersion(fileId, LocalDateTime.now());
+    }
 
     public void addVersion(String fileId, LocalDateTime dateTime) {
         versions.add(new FileVersion(fileId, dateTime));

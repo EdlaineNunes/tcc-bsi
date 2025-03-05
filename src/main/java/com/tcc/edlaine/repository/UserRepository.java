@@ -1,6 +1,6 @@
 package com.tcc.edlaine.repository;
 
-import com.tcc.edlaine.domain.dto.UserEntity;
+import com.tcc.edlaine.domain.entities.UserEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.Optional;

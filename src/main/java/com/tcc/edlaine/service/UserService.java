@@ -1,6 +1,6 @@
 package com.tcc.edlaine.service;
 
-import com.tcc.edlaine.domain.dto.UserEntity;
+import com.tcc.edlaine.domain.entities.UserEntity;
 import com.tcc.edlaine.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,7 +23,7 @@ public class UserService {
 
     // Cadastrar novo usuário
     public UserEntity registerUser(UserEntity userEntity) {
-        userEntity.setSenha(passwordEncoder.encode(userEntity.getSenha()));  // Codificando a senha
+        userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));  // Codificando a senha
         return userRepository.save(userEntity);
     }
 
@@ -38,8 +38,8 @@ public class UserService {
         existingUser.setUsername(userEntity.getUsername());
         existingUser.setCpf(userEntity.getCpf());
         existingUser.setEmail(userEntity.getEmail());
-        if (userEntity.getSenha() != null) {
-            existingUser.setSenha(passwordEncoder.encode(userEntity.getSenha()));
+        if (userEntity.getPassword() != null) {
+            existingUser.setPassword(passwordEncoder.encode(userEntity.getPassword()));
         }
         existingUser.setPermissionLevel(userEntity.getPermissionLevel());
         return userRepository.save(existingUser);

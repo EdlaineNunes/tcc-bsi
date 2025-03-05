@@ -1,4 +1,4 @@
-package com.tcc.edlaine.domain.dto;
+package com.tcc.edlaine.domain.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

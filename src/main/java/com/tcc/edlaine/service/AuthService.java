@@ -1,7 +1,7 @@
 package com.tcc.edlaine.service;
 
 import com.tcc.edlaine.crosscutting.utils.JwtTokenProvider;
-import com.tcc.edlaine.domain.dto.UserEntity;
+import com.tcc.edlaine.domain.entities.UserEntity;
 import com.tcc.edlaine.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,9 +45,9 @@ public class AuthService implements UserDetailsService {
     }
 
     public String register(UserEntity user) {
-        user.setSenha(passwordEncoder.encode(user.getSenha()));
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
-        return authenticate(user.getEmail(), user.getSenha());
+        return authenticate(user.getEmail(), user.getPassword());
     }
 
     @Override
@@ -57,7 +57,7 @@ public class AuthService implements UserDetailsService {
 
         return User.builder()
                 .username(user.getEmail())
-                .password(user.getSenha())
+                .password(user.getPassword())
                 .roles(user.getPermissionLevel().name())
                 .build();
     }

@@ -1,6 +1,6 @@
 package com.tcc.edlaine.controller;
 
-import com.tcc.edlaine.domain.dto.UserEntity;
+import com.tcc.edlaine.domain.entities.UserEntity;
 import com.tcc.edlaine.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
