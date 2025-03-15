@@ -44,7 +44,13 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     @PutMapping("/{id}/disable")
     public ResponseEntity<String> disableUser(@PathVariable String id) {
-        return userService.deactivateUser(id);
+        return userService.changeStatusUser(id, false);
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @PutMapping("/{id}/enable")
+    public ResponseEntity<String> enableUser(@PathVariable String id) {
+        return userService.changeStatusUser(id, true);
     }
 
 }

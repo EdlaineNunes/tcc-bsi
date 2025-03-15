@@ -4,29 +4,30 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tcc.edlaine.domain.enums.PermissionLevel;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 @Data
 @Getter
 @Setter
+@NoArgsConstructor
 @Document(collection = "documents")
 public class DocumentEntity {
     @Id
     private String id;
     private String filename;
     private String customerEmail;
+    private String fileStorageId;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
     private List<FileVersion> versions = new ArrayList<>();
-    private Map<String, PermissionLevel> sharedWith = new HashMap<>(); // E-mail do usuário -> Nível de permissão
 
     private List<SharedRecord> shareHistory = new ArrayList<>();
 
@@ -59,14 +60,19 @@ public class DocumentEntity {
 
     // Método para compartilhar com um e-mail e definir permissão
     public void shareWithEmail(String email, String sharedBy) {
-        FileVersion version = getLatestVersion();
-        shareHistory.add(new SharedRecord(email, sharedBy, version, LocalDateTime.now()));
-        sharedWith.put(email, PermissionLevel.GUEST);
+        String emailId = UUID.randomUUID().toString();
+        SharedRecord sharedRecord = new SharedRecord(email, emailId, PermissionLevel.GUEST, LocalDateTime.now(), sharedBy);
+        shareHistory.add(sharedRecord);
     }
 
     // Método para verificar se o usuário tem permissão para acessar
-    public boolean hasPermission(String email, PermissionLevel requiredPermission) {
-        return sharedWith.containsKey(email) && sharedWith.get(email).ordinal() >= requiredPermission.ordinal();
+    public boolean hasPermission(String emailId, PermissionLevel requiredPermission) {
+        for (SharedRecord record : shareHistory) {
+            if (record.getEmailId().equals(emailId) && record.getPermissionLevel().ordinal() >= requiredPermission.ordinal()) {
+                return true;
+            }
+        }
+        return false;
     }
 
 

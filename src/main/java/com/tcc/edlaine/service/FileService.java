@@ -10,6 +10,7 @@ import com.tcc.edlaine.domain.entities.UserEntity;
 import com.tcc.edlaine.repository.DocumentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.http.HttpHeaders;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -117,16 +119,19 @@ public class FileService {
             DocumentEntity document = findDocumentById(id);
             AuthService.validateUserAccess(user, document.getCustomerEmail());
 
-            GridFsResource resource = fileStorageService.getFile(id);
+            GridFsResource resource = fileStorageService.getFile(document.getLatestVersion().getFileId());
 
             if (resource == null) {
                 throw new FileNotFound("The requested file was not found in the storage.");
             }
 
+            InputStreamResource inputStreamResource = new InputStreamResource(new ByteArrayInputStream(resource.getInputStream().readAllBytes()));
+
+
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                    .body(resource);
+                    .body(inputStreamResource);
         } catch (HttpClientErrorException e) {
             log.error("Client error while retrieving file: {}", e.getMessage());
             throw new FileUnprocessableEntity("Failed to process file request: " + e.getMessage());
@@ -202,6 +207,7 @@ public class FileService {
 
     private DocumentEntity saveDocument(MultipartFile file, UserEntity user) throws IOException {
         String fileId = fileStorageService.saveFile(file);
+        log.info("Id no fileStrage ::::: {}", fileId);
         DocumentEntity document = new DocumentEntity(file.getOriginalFilename(), user.getEmail(), fileId);
 
         documentRepository.save(document);

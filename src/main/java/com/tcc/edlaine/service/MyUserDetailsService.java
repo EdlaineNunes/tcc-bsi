@@ -1,9 +1,10 @@
 package com.tcc.edlaine.service;
 
+import com.tcc.edlaine.crosscutting.exceptions.user.UserAccessDenied;
+import com.tcc.edlaine.crosscutting.exceptions.user.UserNotFound;
 import com.tcc.edlaine.domain.entities.UserEntity;
 import com.tcc.edlaine.repository.UserRepository;
 import org.springframework.context.annotation.Primary;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,10 +23,10 @@ public class MyUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) {
         UserEntity userEntity = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado: " + email));
+                .orElseThrow(() -> new UserNotFound("user [" + email + "] not found"));
 
         if (!userEntity.isActive()) {
-            throw new DisabledException("Usuário inativo");  // Impede o login de usuários inativos
+            throw new UserAccessDenied("user is not active");
         }
 
         return User.builder()

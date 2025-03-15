@@ -33,7 +33,7 @@ public class FileController {
     @PostMapping("/share/{documentId}")
     public ResponseEntity<FileJson> shareFileByEmail(@PathVariable String documentId,
                                                      @RequestParam String email) {
-        return fileService.shareFile(documentId, email);
+        return fileService.shareFile(documentId, email); //todo recurso pago
     }
 
     @ResponseStatus(HttpStatus.OK)
