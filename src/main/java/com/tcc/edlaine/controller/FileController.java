@@ -37,6 +37,13 @@ public class FileController {
     }
 
     @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/upload/{documentId}")
+    public ResponseEntity<FileJson> updateDocumentById(@RequestParam("file") MultipartFile file,
+                                                       @PathVariable String documentId) {
+        return fileService.updateFile(file, documentId);
+    }
+
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/share-history/{documentId}")
     public ResponseEntity<List<SharedRecord>> getShareHistory(@PathVariable String documentId) {
         return fileService.getShareHistory(documentId);
@@ -46,6 +53,12 @@ public class FileController {
     @GetMapping("/my-files")
     public ResponseEntity<List<DocumentEntity>> getMyFiles() {
         return fileService.getUserDocuments();
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/{documentId}")
+    public ResponseEntity<DocumentEntity> getMyFilesById(@PathVariable String documentId) {
+        return fileService.getDocumentById(documentId);
     }
 
     @ResponseStatus(HttpStatus.OK)
@@ -63,6 +76,7 @@ public class FileController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/file-versions/{documentId}")
     public ResponseEntity<List<FileVersion>> getFileVersions(@PathVariable String documentId) {
+        log.info("Buscando documento com id :::: {}", documentId);
         return fileService.getFileVersionsById(documentId);
     }
 

@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.UUID;
 
 @Data
-@Getter
-@Setter
 @NoArgsConstructor
 @Document(collection = "documents")
 public class DocumentEntity {
@@ -34,6 +32,18 @@ public class DocumentEntity {
     public DocumentEntity(String filename,
                           String customerEmail,
                           String fileId) {
+        this.filename = filename;
+        this.customerEmail = customerEmail;
+        this.createdAt = LocalDateTime.now();
+
+        addVersion(fileId, LocalDateTime.now());
+    }
+
+    public DocumentEntity(String filename,
+                          String customerEmail,
+                          String fileId,
+                          String documentId) {
+        this.id = documentId;
         this.filename = filename;
         this.customerEmail = customerEmail;
         this.createdAt = LocalDateTime.now();

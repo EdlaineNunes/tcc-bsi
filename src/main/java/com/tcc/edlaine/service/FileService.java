@@ -50,6 +50,22 @@ public class FileService {
         }
     }
 
+    public ResponseEntity<FileJson> updateFile(MultipartFile file, String documentId) {
+        try {
+            UserEntity user = authService.getAuthenticatedUser();
+            AuthService.validateGuestAccess(user);
+
+            DocumentEntity document = updateDocument(file, user, documentId);
+            return ResponseEntity.ok(new FileJson(document.getId(), document.getFilename()));
+        } catch (HttpClientErrorException e) {
+            log.error("Failed to upload file: {}", e.getMessage());
+            throw new FileUnprocessableEntity("Failed to upload file. Details: " + e.getMessage());
+        } catch (Exception e){
+            log.error("Unexpected error while uploading file: {}", e.getMessage());
+            throw new RuntimeException("An unexpected error occurred while uploading the file. Details: " + e.getMessage());
+        }
+    }
+
     public ResponseEntity<FileJson> shareFile(String documentId, String email) {
         try {
             UserEntity user = authService.getAuthenticatedUser();
@@ -97,6 +113,19 @@ public class FileService {
         } catch (Exception e){
             log.error("Failed to retrieve user documents: {}", e.getMessage());
             throw new FileUnprocessableEntity("Failed to retrieve user documents. Details: " + e.getMessage());
+        }
+    }
+
+    public ResponseEntity<DocumentEntity> getDocumentById(String documentId) {
+        try {
+            UserEntity user = authService.getAuthenticatedUser();
+            AuthService.validateGuestAccess(user);
+            DocumentEntity document = findDocumentById(documentId);
+
+            return ResponseEntity.ok(document);
+        } catch (Exception e){
+            log.error("Failed to retrieve document for id: {}", e.getMessage());
+            throw new FileUnprocessableEntity("Failed to retrieve documents for id. Details: " + e.getMessage());
         }
     }
 
@@ -209,6 +238,16 @@ public class FileService {
         String fileId = fileStorageService.saveFile(file);
         log.info("Id no fileStrage ::::: {}", fileId);
         DocumentEntity document = new DocumentEntity(file.getOriginalFilename(), user.getEmail(), fileId);
+
+        documentRepository.save(document);
+        log.info("Document saved: {}", document.getId());
+        return document;
+    }
+
+    private DocumentEntity updateDocument(MultipartFile file, UserEntity user, String documentId) throws IOException {
+        String fileId = fileStorageService.saveFile(file);
+        log.info("Id no fileStrage ::::: {}", fileId);
+        DocumentEntity document = new DocumentEntity(file.getOriginalFilename(), user.getEmail(), fileId, documentId);
 
         documentRepository.save(document);
         log.info("Document saved: {}", document.getId());
