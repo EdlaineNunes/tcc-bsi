@@ -3,12 +3,14 @@ package com.tcc.edlaine.controller;
 import com.tcc.edlaine.domain.entities.UserEntity;
 import com.tcc.edlaine.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/users")
@@ -25,6 +27,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/{id}")
     public ResponseEntity<UserEntity> getUser(@PathVariable String id) {
+        log.info("Get user with id {}", id);
         return userService.getUserById(id);
     }
 
@@ -38,6 +41,7 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<UserEntity> updateUser(@PathVariable String id,
                                                  @RequestBody UserEntity userEntity) {
+        log.info("Usuario recebido para atualizar:::::: {}", userEntity.toString());
         return userService.updateUser(id, userEntity);
     }
 

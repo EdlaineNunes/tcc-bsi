@@ -43,7 +43,8 @@ public class UserService {
             UserEntity recoveredUser = userRepository.findById(id).orElseThrow(() -> new UserNotFound("user not found"));
             AuthService.validateAdminAccessOrOwnerData(user, recoveredUser.getEmail());
             user.setPassword(null);
-            return ResponseEntity.ok(user);
+            log.info("User retornado::: {}", recoveredUser);
+            return ResponseEntity.ok(recoveredUser);
         } catch (Exception e) {
             log.error("Error recovered user. {}", e.getMessage());
             throw new UnprocessableEntityErrorException("Error recovered user -> " + e.getMessage());

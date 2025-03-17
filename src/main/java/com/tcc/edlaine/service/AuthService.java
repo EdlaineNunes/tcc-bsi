@@ -85,18 +85,17 @@ public class AuthService implements UserDetailsService {
     }
 
     public static void validateUserAccess(UserEntity user, String customerEmailDocument) {
-        if (!user.isActive()
-                || user.getPermissionLevel() == PermissionLevel.GUEST
-                || !Objects.equals(user.getEmail(), customerEmailDocument)) {
+        if (!user.isActive() ||
+                (user.getPermissionLevel() == PermissionLevel.GUEST &&
+                        !Objects.equals(user.getEmail(), customerEmailDocument))) {
             throw new UserAccessDenied("Unable to upload!");
         }
     }
 
     public static void validateAdminAccessOrOwnerData(UserEntity user, String customerEmailDocument){
-        if (!user.isActive()
-                || user.getPermissionLevel() == PermissionLevel.GUEST
-                || user.getPermissionLevel() == PermissionLevel.USER
-                || !Objects.equals(user.getEmail(), customerEmailDocument)) {
+        if (!user.isActive() ||
+                (user.getPermissionLevel().getLevel() < PermissionLevel.ADMIN.getLevel() &&
+                        !Objects.equals(user.getEmail(), customerEmailDocument))) {
             throw new UserAccessDenied("Unable to upload!");
         }
     }
