@@ -270,7 +270,10 @@ public class FileService {
             DocumentEntity document = findDocumentById(documentId);
             AuthService.validadeUserAndAuthoritySuperAdmin(user);
 
-            fileStorageService.deleteFile(documentId);
+            document.getVersions().forEach(fileVersion -> {
+                fileStorageService.deleteFile(fileVersion.getFileId());
+            });
+            documentRepository.delete(document);
 
             return ResponseEntity.ok(new FileJson(document.getId(), document.getFilename()));
         } catch (HttpClientErrorException e) {
