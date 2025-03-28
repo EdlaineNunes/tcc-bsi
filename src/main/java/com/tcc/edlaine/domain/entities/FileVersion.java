@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 public class FileVersion {
-    private String fileId; // ID do arquivo salvo no GridFS
+    private String fileId;
+    private String fileName;
     private LocalDateTime uploadedAt;
 }

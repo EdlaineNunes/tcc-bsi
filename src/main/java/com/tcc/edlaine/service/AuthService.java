@@ -47,7 +47,7 @@ public class AuthService implements UserDetailsService {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found!"));
 
-        return jwtTokenProvider.generateToken(user.getEmail());
+        return jwtTokenProvider.generateToken(user);
     }
 
     public String register(UserEntity user) {

@@ -3,9 +3,7 @@ package com.tcc.edlaine.domain.entities;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tcc.edlaine.domain.enums.PermissionLevel;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -36,7 +34,7 @@ public class DocumentEntity {
         this.customerEmail = customerEmail;
         this.createdAt = LocalDateTime.now();
 
-        addVersion(fileId, LocalDateTime.now());
+        addVersion(fileId, filename, LocalDateTime.now());
     }
 
     public DocumentEntity(String filename,
@@ -48,11 +46,11 @@ public class DocumentEntity {
         this.customerEmail = customerEmail;
         this.createdAt = LocalDateTime.now();
 
-        addVersion(fileId, LocalDateTime.now());
+        addVersion(fileId, filename, LocalDateTime.now());
     }
 
-    public void addVersion(String fileId, LocalDateTime dateTime) {
-        versions.add(new FileVersion(fileId, dateTime));
+    public void addVersion(String fileId, String filename, LocalDateTime dateTime) {
+        versions.add(new FileVersion(fileId, filename, dateTime));
     }
 
     // Recuperar a versão mais recente
