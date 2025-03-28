@@ -24,6 +24,7 @@ public class JwtTokenProvider {
                 .setSubject(user.getEmail())
                 .claim("name", user.getUsername())
                 .claim("role", user.getPermissionLevel().name())
+                .claim("userId", user.getId())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 horas
                 .signWith(key, SignatureAlgorithm.HS256)

@@ -87,6 +87,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                                 .requestMatchers("/auth/**").permitAll()  // Permite acesso público para login
+                                .requestMatchers("/auth/register/**").permitAll()  // Permite acesso público para login
                                 .requestMatchers("/files/**").permitAll()  // Permite acesso público para login
                                 .requestMatchers("/users/**").permitAll()  // Permite acesso público para login
 //                        .requestMatchers("/files/**").authenticated()  // Requer autenticação para acessar arquivos

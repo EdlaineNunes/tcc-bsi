@@ -3,16 +3,20 @@ package com.tcc.edlaine.service;
 import com.tcc.edlaine.crosscutting.exceptions.general.UnprocessableEntityErrorException;
 import com.tcc.edlaine.crosscutting.exceptions.user.UserBadRequest;
 import com.tcc.edlaine.crosscutting.exceptions.user.UserNotFound;
+import com.tcc.edlaine.crosscutting.exceptions.user.UserUnauthorized;
 import com.tcc.edlaine.domain.entities.UserEntity;
+import com.tcc.edlaine.domain.enums.PermissionLevel;
 import com.tcc.edlaine.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -51,7 +55,6 @@ public class UserService {
         }
     }
 
-    //TODO: quando o dado em userEntity vier vazio, não deve atualizar, deve permanecer com o dado já cadastrado. Ajustar
     public ResponseEntity<UserEntity> updateUser(String id, UserEntity userEntity) {
         try{
             UserEntity user = authService.getAuthenticatedUser();
@@ -64,12 +67,6 @@ public class UserService {
             existingUser.setUsername(userEntity.getUsername());
             existingUser.setCpf(userEntity.getCpf());
             existingUser.setEmail(userEntity.getEmail());
-//            if (StringUtils.isNotBlank(userEntity.getPassword())) {
-//                existingUser.setPassword(passwordEncoder.encode(userEntity.getPassword()));
-//            } else{
-//                existingUser.setPassword(existingUser.getPassword());
-//                existingUser.setPassword(passwordEncoder.encode("edlaine123"));
-//            }
             existingUser.setPermissionLevel(userEntity.getPermissionLevel());
             userRepository.save(existingUser);
 
@@ -81,7 +78,27 @@ public class UserService {
         }
     }
 
-    //TODO: ao desativar um usuário, deslogar ele se estiver com token habilitado
+    public HttpStatus updatePassword(String id, String password) {
+        try{
+            UserEntity user = authService.getAuthenticatedUser();
+            UserEntity existingUser = getUserById(id).getBody();
+            assert existingUser != null;
+
+            if(!Objects.equals(user.getId(), existingUser.getId())
+                    || user.getPermissionLevel().getLevel() >= PermissionLevel.ADMIN.getLevel()){
+                throw new UserUnauthorized();
+            }
+
+            existingUser.setPassword(passwordEncoder.encode(password));
+            userRepository.save(existingUser);
+
+            return HttpStatus.OK;
+        } catch (Exception e) {
+            log.error("Error update user. {}", e.getMessage());
+            throw new UnprocessableEntityErrorException("Error recovered user -> " + e.getMessage());
+        }
+    }
+
     @Transactional
     public ResponseEntity<String> changeStatusUser(String id, boolean active) {
         try{

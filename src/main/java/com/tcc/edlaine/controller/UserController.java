@@ -41,8 +41,14 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<UserEntity> updateUser(@PathVariable String id,
                                                  @RequestBody UserEntity userEntity) {
-        log.info("Usuario recebido para atualizar:::::: {}", userEntity.toString());
         return userService.updateUser(id, userEntity);
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @PutMapping("/password/{id}")
+    public HttpStatus updatePassword(@PathVariable String id,
+                                     @RequestBody String password) {
+        return userService.updatePassword(id, password);
     }
 
     @ResponseStatus(HttpStatus.OK)

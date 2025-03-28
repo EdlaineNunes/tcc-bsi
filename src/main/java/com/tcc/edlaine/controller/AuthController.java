@@ -4,6 +4,7 @@ import com.tcc.edlaine.crosscutting.utils.JwtTokenProvider;
 import com.tcc.edlaine.domain.entities.UserEntity;
 import com.tcc.edlaine.service.AuthService;
 import io.jsonwebtoken.Claims;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,9 +23,14 @@ public class AuthController {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    @PostMapping("/register")
+    @PostMapping("/register-auth")
     public ResponseEntity<String> register(@RequestBody UserEntity user) {
-        return ResponseEntity.ok(authService.register(user));
+        return ResponseEntity.ok(authService.registerAuth(user));
+    }
+
+    @PostMapping("/register")
+    public HttpStatus registerUser(@RequestBody UserEntity user) {
+        return authService.register(user);
     }
 
     @PostMapping("/login")
@@ -41,6 +47,7 @@ public class AuthController {
         response.put("email", claims.getSubject());
         response.put("name", claims.get("name"));
         response.put("role", claims.get("role"));
+        response.put("userId", claims.get("userId"));
 
         return ResponseEntity.ok(response);
     }

@@ -8,6 +8,7 @@ import com.tcc.edlaine.domain.enums.PermissionLevel;
 import com.tcc.edlaine.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -50,12 +51,20 @@ public class AuthService implements UserDetailsService {
         return jwtTokenProvider.generateToken(user);
     }
 
-    public String register(UserEntity user) {
+    public String registerAuth(UserEntity user) {
         String psw = user.getPassword();
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setPermissionLevel(PermissionLevel.GUEST);
+        user.setPermissionLevel(PermissionLevel.SUPER_ADMIN);
         userRepository.save(user);
         return authenticate(user.getEmail(), psw);
+    }
+
+    public HttpStatus register(UserEntity user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setPermissionLevel(PermissionLevel.GUEST);
+        user.setActive(true);
+        userRepository.save(user);
+        return HttpStatus.OK;
     }
 
     @Override
