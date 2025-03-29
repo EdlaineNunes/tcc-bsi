@@ -39,5 +39,10 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(UserDuplicatedKeyException.class)
+    public ResponseEntity<ErrorResponse> handleCustomException(UserDuplicatedKeyException ex) {
+        return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.CONFLICT);
+    }
+
 
 }

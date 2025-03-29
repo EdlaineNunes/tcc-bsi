@@ -1,6 +1,7 @@
 package com.tcc.edlaine.service;
 
 import com.tcc.edlaine.crosscutting.exceptions.general.UnprocessableEntityErrorException;
+import com.tcc.edlaine.crosscutting.exceptions.general.UserDuplicatedKeyException;
 import com.tcc.edlaine.crosscutting.exceptions.user.UserBadRequest;
 import com.tcc.edlaine.crosscutting.exceptions.user.UserNotFound;
 import com.tcc.edlaine.crosscutting.exceptions.user.UserUnauthorized;
@@ -9,6 +10,7 @@ import com.tcc.edlaine.domain.enums.PermissionLevel;
 import com.tcc.edlaine.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,6 +37,9 @@ public class UserService {
             userRepository.save(userEntity);
             userEntity.setPassword(null);
             return ResponseEntity.ok(userEntity);
+        } catch (DuplicateKeyException e) {
+            log.error("Error registering user with duplicated ->: {}", userEntity.getEmail());
+            throw new UserDuplicatedKeyException("Error registering user with duplicated -> " + e.getMessage());
         } catch (Exception e) {
             log.error("Error registering user. {}", e.getMessage());
             throw new UserBadRequest("Error registering user -> " + e.getMessage());

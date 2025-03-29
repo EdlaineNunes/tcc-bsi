@@ -13,16 +13,14 @@ public class MongoConfig {
 
     private final MongoTemplate mongoTemplate;
 
-    // Injeção do MongoTemplate
     @Autowired
     public MongoConfig(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
     }
 
-    // Criação do GridFSBucket
     @Bean
     public GridFSBucket gridFSBucket() {
-        MongoDatabase database = mongoTemplate.getDb();  // Obtém o banco de dados configurado no MongoTemplate
+        MongoDatabase database = mongoTemplate.getDb();
         return GridFSBuckets.create(database);
     }
 }

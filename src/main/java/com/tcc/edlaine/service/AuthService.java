@@ -1,6 +1,8 @@
 package com.tcc.edlaine.service;
 
+import com.tcc.edlaine.crosscutting.exceptions.general.UserDuplicatedKeyException;
 import com.tcc.edlaine.crosscutting.exceptions.user.UserAccessDenied;
+import com.tcc.edlaine.crosscutting.exceptions.user.UserBadRequest;
 import com.tcc.edlaine.crosscutting.exceptions.user.UserNotFound;
 import com.tcc.edlaine.crosscutting.utils.JwtTokenProvider;
 import com.tcc.edlaine.domain.entities.UserEntity;
@@ -8,6 +10,7 @@ import com.tcc.edlaine.domain.enums.PermissionLevel;
 import com.tcc.edlaine.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -53,18 +56,34 @@ public class AuthService implements UserDetailsService {
 
     public String registerAuth(UserEntity user) {
         String psw = user.getPassword();
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setPermissionLevel(PermissionLevel.SUPER_ADMIN);
-        userRepository.save(user);
-        return authenticate(user.getEmail(), psw);
+        try{
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            user.setPermissionLevel(PermissionLevel.SUPER_ADMIN);
+            userRepository.save(user);
+            return authenticate(user.getEmail(), psw);
+        }catch (DuplicateKeyException e) {
+            log.error("Error registering user with duplicated ->: {}", user.getEmail());
+            throw new UserDuplicatedKeyException("Error registering user with duplicated -> " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Error registering user. {}", e.getMessage());
+            throw new UserBadRequest("Error registering user -> " + e.getMessage());
+        }
     }
 
     public HttpStatus register(UserEntity user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setPermissionLevel(PermissionLevel.GUEST);
-        user.setActive(true);
-        userRepository.save(user);
-        return HttpStatus.OK;
+        try{
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            user.setPermissionLevel(PermissionLevel.GUEST);
+            user.setActive(true);
+            userRepository.save(user);
+            return HttpStatus.OK;
+        }catch (DuplicateKeyException e) {
+            log.error("Error registering user with duplicated ->: {}", user.getEmail());
+            throw new UserDuplicatedKeyException("Error registering user with duplicated -> " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Error registering user. {}", e.getMessage());
+            throw new UserBadRequest("Error registering user -> " + e.getMessage());
+        }
     }
 
     @Override
