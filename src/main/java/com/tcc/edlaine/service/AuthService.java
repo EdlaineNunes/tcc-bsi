@@ -130,13 +130,6 @@ public class AuthService implements UserDetailsService {
         }
     }
 
-    public static void validateUserDocumentAccess(UserEntity user) {
-        if (!user.isActive() ||
-                (user.getPermissionLevel() == PermissionLevel.GUEST)) {
-            throw new UserAccessDenied("Unable to access!");
-        }
-    }
-
     public static void validateAdminAccessOrOwnerData(UserEntity user, String customerEmailDocument){
         if (!user.isActive() ||
                 (user.getPermissionLevel().getLevel() < PermissionLevel.ADMIN.getLevel() &&

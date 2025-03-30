@@ -25,8 +25,9 @@ public class FileController {
 
     @ResponseStatus(HttpStatus.OK)
     @PostMapping("/upload")
-    public ResponseEntity<FileJson> upload(@RequestParam("file") MultipartFile file) {
-        return fileService.uploadFile(file);
+    public ResponseEntity<FileJson> upload(@RequestParam("file") MultipartFile file,
+                                           @RequestParam String type) {
+        return fileService.uploadFile(file, type);
     }
 
     @ResponseStatus(HttpStatus.OK)

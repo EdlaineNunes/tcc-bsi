@@ -7,6 +7,8 @@ import com.tcc.edlaine.domain.entities.DocumentEntity;
 import com.tcc.edlaine.domain.entities.FileVersion;
 import com.tcc.edlaine.domain.entities.SharedRecord;
 import com.tcc.edlaine.domain.entities.UserEntity;
+import com.tcc.edlaine.domain.enums.DocumentType;
+import com.tcc.edlaine.domain.enums.PermissionLevel;
 import com.tcc.edlaine.repository.DocumentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,24 +43,18 @@ public class FileService {
     private static final List<String> VALID_EXTENSIONS = Arrays.asList("jpg", "jpeg", "png", "pdf", "xls", "xlsx", "doc", "docx", "csv");
 
 
-    public ResponseEntity<FileJson> uploadFile(MultipartFile file) {
+    public ResponseEntity<FileJson> uploadFile(MultipartFile file, String type) {
         try {
             String fileName = file.getOriginalFilename();
-
-            if (fileName == null || fileName.isEmpty()) {
-                throw new FileUnprocessableEntity("File must have a valid extension. It appears the file is missing an extension.");
-            }
-
-            String extension = getFileExtension(fileName);
-
-            if (extension.isEmpty() || !VALID_EXTENSIONS.contains(extension)) {
-                throw new FileUnprocessableEntity("Invalid file extension. Allowed extensions are: " + VALID_EXTENSIONS);
-            }
+            validateFileExtension(fileName);
 
             UserEntity user = authService.getAuthenticatedUser();
             AuthService.validateGuestAccess(user);
 
-            DocumentEntity document = saveDocument(file, user);
+            DocumentType documentType = DocumentType.valueOf(type);
+            validateUserPermissionForDocumentType(user, documentType);
+
+            DocumentEntity document = saveDocument(file, user, type);
             return ResponseEntity.ok(new FileJson(document.getId(), document.getFilename()));
         } catch (FileUnprocessableEntity e) {
             log.error("Invalid file extension: {}", e.getMessage());
@@ -66,7 +62,7 @@ public class FileService {
         } catch (HttpClientErrorException e) {
             log.error("Failed to upload file: {}", e.getMessage());
             throw new FileUnprocessableEntity("Failed to upload file. Details: " + e.getMessage());
-        } catch (Exception e){
+        } catch (Exception e) {
             log.error("Unexpected error while uploading file: {}", e.getMessage());
             throw new RuntimeException("An unexpected error occurred while uploading the file. Details: " + e.getMessage());
         }
@@ -75,32 +71,25 @@ public class FileService {
     public ResponseEntity<FileJson> updateFile(MultipartFile file, String documentId) {
         try {
             String fileName = file.getOriginalFilename();
-
-            if (fileName == null || fileName.isEmpty()) {
-                throw new FileUnprocessableEntity("File must have a valid extension. It appears the file is missing an extension.");
-            }
-
-            String extension = getFileExtension(fileName);
-
-            if (extension.isEmpty() || !VALID_EXTENSIONS.contains(extension)) {
-                throw new FileUnprocessableEntity("Invalid file extension. Allowed extensions are: " + VALID_EXTENSIONS);
-            }
+            validateFileExtension(fileName);
 
             UserEntity user = authService.getAuthenticatedUser();
-            DocumentEntity documentEntity = findDocumentById(documentId);
-            AuthService.validateAdminAccessOrOwnerData(user, documentEntity.getCustomerEmail());
+            DocumentEntity document = findDocumentById(documentId);
 
-            DocumentEntity document = updateDocument(file, user, documentId);
-            return ResponseEntity.ok(new FileJson(document.getId(), document.getFilename()));
+            AuthService.validateAdminAccessOrOwnerData(user, document.getCustomerEmail());
+            validateUserPermissionForDocumentType(user, document.getType());
+
+            DocumentEntity updatedDocument = updateDocument(file, user, documentId, document.getType().name());
+            return ResponseEntity.ok(new FileJson(updatedDocument.getId(), updatedDocument.getFilename()));
         } catch (FileUnprocessableEntity e) {
             log.error("Invalid file extension: {}", e.getMessage());
             throw e;
         } catch (HttpClientErrorException e) {
-            log.error("Failed to upload file: {}", e.getMessage());
-            throw new FileUnprocessableEntity("Failed to upload file. Details: " + e.getMessage());
-        } catch (Exception e){
-            log.error("Unexpected error while uploading file: {}", e.getMessage());
-            throw new RuntimeException("An unexpected error occurred while uploading the file. Details: " + e.getMessage());
+            log.error("Failed to update file: {}", e.getMessage());
+            throw new FileUnprocessableEntity("Failed to update file. Details: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error while updating file: {}", e.getMessage());
+            throw new RuntimeException("An unexpected error occurred while updating the file. Details: " + e.getMessage());
         }
     }
 
@@ -112,9 +101,9 @@ public class FileService {
 
             document.shareWithEmail(email, user.getEmail());
 
-            documentRepository.save(document);
             log.info("Initializing email sending for document {} and email {}", documentId, email);
             emailService.sendEmail(email, document.getFilename());
+            documentRepository.save(document);
 
             return ResponseEntity.ok(new FileJson(document.getId(), document.getFilename()));
         } catch (HttpClientErrorException e) {
@@ -172,7 +161,13 @@ public class FileService {
         try {
             UserEntity user = authService.getAuthenticatedUser();
             AuthService.validateGuestAccess(user);
-            List<DocumentEntity> userFiles = documentRepository.findAll();
+            List<DocumentEntity> userFiles;
+
+            if(isPrivilegedUser(user)){
+                userFiles= documentRepository.findAll();
+            }else{
+                userFiles = documentRepository.findByType(DocumentType.PUBLIC);
+            }
 
             return ResponseEntity.ok(userFiles);
         } catch (Exception e){
@@ -186,6 +181,7 @@ public class FileService {
             UserEntity user = authService.getAuthenticatedUser();
             DocumentEntity document = findDocumentById(id);
             AuthService.validateGuestAccess(user);
+            validateUserPermissionForDocumentType(user, document.getType());
 
             GridFsResource resource = fileStorageService.getFile(document.getLatestVersion().getFileId());
 
@@ -193,22 +189,16 @@ public class FileService {
                 throw new FileNotFound("The requested file was not found in the storage.");
             }
 
-            String fileName = resource.getFilename();
-            String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-            String mimeType = getMimeType(extension);
-
-            InputStreamResource inputStreamResource = new InputStreamResource(resource.getInputStream());
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(mimeType))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")  // Garante o nome correto
-                    .body(inputStreamResource);
+            return createDownloadResponse(resource);
+        } catch (FileNotFound e) {
+            log.error("File not found: {}", e.getMessage());
+            throw e;
         } catch (HttpClientErrorException e) {
             log.error("Client error while retrieving file: {}", e.getMessage());
             throw new FileUnprocessableEntity("Failed to process file request: " + e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected error while retrieving file: {}", e.getMessage());
-            throw new RuntimeException("An unexpected error occurred while retrieving the file: " + e.getMessage());
+            throw new RuntimeException("An unexpected error occurred while retrieving the file. Details: " + e.getMessage());
         }
     }
 
@@ -240,6 +230,7 @@ public class FileService {
             UserEntity user = authService.getAuthenticatedUser();
             DocumentEntity document = findDocumentById(documentId);
             AuthService.validateGuestAccess(user);
+            validateUserPermissionForDocumentType(user, document.getType());
 
             FileVersion version = document.getVersionByIndex(versionIndex);
             if (version == null) {
@@ -247,22 +238,16 @@ public class FileService {
             }
 
             GridFsResource resource = fileStorageService.getFile(version.getFileId());
-            String fileName = resource.getFilename();
-            String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-            String mimeType = getMimeType(extension);
-
-            InputStreamResource inputStreamResource = new InputStreamResource(resource.getInputStream());
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(mimeType))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")  // Garante o nome correto
-                    .body(inputStreamResource);
+            return createDownloadResponse(resource);
+        } catch (FileNotFound e) {
+            log.error("File version not found: {}", e.getMessage());
+            throw e;
         } catch (HttpClientErrorException e) {
             log.error("Client error while retrieving file version: {}", e.getMessage());
             throw new FileUnprocessableEntity("Failed to process file version request: " + e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected error while retrieving file version: {}", e.getMessage());
-            throw new RuntimeException("An unexpected error occurred while retrieving the file version: " + e.getMessage());
+            throw new RuntimeException("An unexpected error occurred while retrieving the file version. Details: " + e.getMessage());
         }
     }
 
@@ -292,27 +277,31 @@ public class FileService {
                 .orElseThrow(() -> new FileNotFound("Document notFound"));
     }
 
-    private DocumentEntity saveDocument(MultipartFile file, UserEntity user) throws IOException {
+    private DocumentEntity saveDocument(MultipartFile file, UserEntity user, String type) throws IOException {
         String fileId = fileStorageService.saveFile(file);
         log.info("Id no fileStrage ::::: {}", fileId);
-        DocumentEntity document = new DocumentEntity(file.getOriginalFilename(), user.getEmail(), fileId);
+        DocumentEntity document = new DocumentEntity(file.getOriginalFilename(), user.getEmail(), fileId, type);
 
         documentRepository.save(document);
         log.info("Document saved: {}", document.getId());
         return document;
     }
 
-    private DocumentEntity updateDocument(MultipartFile file, UserEntity user, String documentId) throws IOException {
+    private DocumentEntity updateDocument(MultipartFile file, UserEntity user, String documentId, String type) throws IOException {
         String fileId = fileStorageService.saveFile(file);
         log.info("Id no fileStorage ::::: {}", fileId);
 
         DocumentEntity document = findDocumentById(documentId);
 
+        AuthService.validateAdminAccessOrOwnerData(user, document.getCustomerEmail());
+        validateUserPermissionForDocumentType(user, document.getType());
+
         DocumentEntity updatedDocument = new DocumentEntity(
                 file.getOriginalFilename(),
                 user.getEmail(),
                 fileId,
-                document.getId()
+                document.getId(),
+                type
         );
 
         List<FileVersion> allVersions = new ArrayList<>(document.getVersions());
@@ -362,6 +351,46 @@ public class FileService {
             case "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
             default -> "application/octet-stream";
         };
+    }
+
+    private boolean isPrivilegedUser(UserEntity user) {
+        if (user.getPermissionLevel() == null) {
+            return false;
+        }
+
+        PermissionLevel permission = user.getPermissionLevel();
+
+        return permission == PermissionLevel.ADMIN ||
+                permission == PermissionLevel.SUPER_ADMIN ||
+                permission == PermissionLevel.COUNTER;
+    }
+
+    private void validateFileExtension(String fileName) {
+        if (fileName == null || fileName.isEmpty()) {
+            throw new FileUnprocessableEntity("File must have a valid extension.");
+        }
+
+        String extension = getFileExtension(fileName);
+        if (extension.isEmpty() || !VALID_EXTENSIONS.contains(extension)) {
+            throw new FileUnprocessableEntity("Invalid file extension. Allowed extensions: " + VALID_EXTENSIONS);
+        }
+    }
+
+    private void validateUserPermissionForDocumentType(UserEntity user, DocumentType type) {
+        if (type == DocumentType.FINANCIAL && !isPrivilegedUser(user)) {
+            throw new FileUnprocessableEntity("You do not have permission to upload, update, or download FINANCIAL documents.");
+        }
+    }
+
+    private ResponseEntity<Resource> createDownloadResponse(GridFsResource resource) throws IOException {
+        String fileName = resource.getFilename();
+        String extension = getFileExtension(fileName);
+        String mimeType = getMimeType(extension);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(mimeType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .body(new InputStreamResource(resource.getInputStream()));
     }
 
 }
