@@ -47,7 +47,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     @PutMapping("/password/{id}")
     public HttpStatus updatePassword(@PathVariable String id,
-                                     @RequestBody String password) {
+                                     @RequestParam String password) {
         return userService.updatePassword(id, password);
     }
 

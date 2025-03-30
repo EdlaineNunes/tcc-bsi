@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,13 +26,12 @@ public class UserService {
 
     private final AuthService authService;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
     public ResponseEntity<UserEntity> registerUser(UserEntity userEntity) {
         try {
             UserEntity user = authService.getAuthenticatedUser();
             AuthService.validateAdminAccess(user);
-            userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
+            userEntity.setPassword(authService.encriptPassword(userEntity.getPassword()));
             userRepository.save(userEntity);
             userEntity.setPassword(null);
             return ResponseEntity.ok(userEntity);
@@ -90,11 +88,11 @@ public class UserService {
             assert existingUser != null;
 
             if(!Objects.equals(user.getId(), existingUser.getId())
-                    || user.getPermissionLevel().getLevel() >= PermissionLevel.ADMIN.getLevel()){
+                    && user.getPermissionLevel().getLevel() < PermissionLevel.ADMIN.getLevel()){
                 throw new UserUnauthorized();
             }
 
-            existingUser.setPassword(passwordEncoder.encode(password));
+            existingUser.setPassword(authService.encriptPassword(password));
             userRepository.save(existingUser);
 
             return HttpStatus.OK;

@@ -51,13 +51,13 @@ public class AuthService implements UserDetailsService {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found!"));
 
-        return jwtTokenProvider.generateToken(user);
+        return generateToken(user);
     }
 
     public String registerAuth(UserEntity user) {
         String psw = user.getPassword();
         try{
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            user.setPassword(encriptPassword(psw));
             user.setPermissionLevel(PermissionLevel.SUPER_ADMIN);
             userRepository.save(user);
             return authenticate(user.getEmail(), psw);
@@ -71,11 +71,13 @@ public class AuthService implements UserDetailsService {
     }
 
     public HttpStatus register(UserEntity user) {
+        String psw = user.getPassword();
         try{
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            user.setPassword(encriptPassword(psw));
             user.setPermissionLevel(PermissionLevel.GUEST);
             user.setActive(true);
             userRepository.save(user);
+            authenticate(user.getEmail(), psw);
             return HttpStatus.OK;
         }catch (DuplicateKeyException e) {
             log.error("Error registering user with duplicated ->: {}", user.getEmail());
@@ -103,6 +105,14 @@ public class AuthService implements UserDetailsService {
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
         return userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFound("userEmail {" + userEmail + "} notFound"));
+    }
+
+    public String encriptPassword(String psw) {
+        return passwordEncoder.encode(psw);
+    }
+
+    public String generateToken(UserEntity user) {
+        return jwtTokenProvider.generateToken(user);
     }
 
     public static void validateGuestAccess(UserEntity user) {
