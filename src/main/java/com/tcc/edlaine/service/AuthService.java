@@ -118,7 +118,7 @@ public class AuthService implements UserDetailsService {
     public static void validateGuestAccess(UserEntity user) {
         if (!user.isActive()
                 || user.getPermissionLevel() == PermissionLevel.GUEST) {
-            throw new UserAccessDenied("Unable to upload!");
+            throw new UserAccessDenied("Unable to access!");
         }
     }
 
@@ -126,7 +126,14 @@ public class AuthService implements UserDetailsService {
         if (!user.isActive() ||
                 (user.getPermissionLevel() == PermissionLevel.GUEST &&
                         !Objects.equals(user.getEmail(), customerEmailDocument))) {
-            throw new UserAccessDenied("Unable to upload!");
+            throw new UserAccessDenied("Unable to access!");
+        }
+    }
+
+    public static void validateUserDocumentAccess(UserEntity user) {
+        if (!user.isActive() ||
+                (user.getPermissionLevel() == PermissionLevel.GUEST)) {
+            throw new UserAccessDenied("Unable to access!");
         }
     }
 
@@ -134,21 +141,21 @@ public class AuthService implements UserDetailsService {
         if (!user.isActive() ||
                 (user.getPermissionLevel().getLevel() < PermissionLevel.ADMIN.getLevel() &&
                         !Objects.equals(user.getEmail(), customerEmailDocument))) {
-            throw new UserAccessDenied("Unable to upload!");
+            throw new UserAccessDenied("Unable to access!");
         }
     }
 
     public static void validateAdminAccess(UserEntity user) {
         if (!user.isActive()
                 || user.getPermissionLevel().getLevel() < PermissionLevel.ADMIN.getLevel()) {
-            throw new UserAccessDenied("Unable to upload!");
+            throw new UserAccessDenied("Unable to access!");
         }
     }
 
     public static void validadeUserAndAuthoritySuperAdmin(UserEntity user) {
         if (!user.isActive()
                 || user.getPermissionLevel().getLevel() < PermissionLevel.SUPER_ADMIN.getLevel()) {
-            throw new UserAccessDenied("Unable to upload!");
+            throw new UserAccessDenied("Unable to access!");
         }
     }
 

@@ -87,7 +87,8 @@ public class FileService {
             }
 
             UserEntity user = authService.getAuthenticatedUser();
-            AuthService.validateGuestAccess(user);
+            DocumentEntity documentEntity = findDocumentById(documentId);
+            AuthService.validateAdminAccessOrOwnerData(user, documentEntity.getCustomerEmail());
 
             DocumentEntity document = updateDocument(file, user, documentId);
             return ResponseEntity.ok(new FileJson(document.getId(), document.getFilename()));
@@ -106,10 +107,11 @@ public class FileService {
     public ResponseEntity<FileJson> shareFile(String documentId, String email) {
         try {
             UserEntity user = authService.getAuthenticatedUser();
-            AuthService.validateGuestAccess(user);
-
             DocumentEntity document = findDocumentById(documentId);
+            AuthService.validateUserAccess(user, document.getCustomerEmail());
+
             document.shareWithEmail(email, user.getEmail());
+
             documentRepository.save(document);
             log.info("Initializing email sending for document {} and email {}", documentId, email);
             emailService.sendEmail(email, document.getFilename());
@@ -169,7 +171,7 @@ public class FileService {
     public ResponseEntity<List<DocumentEntity>> getAllDocuments() {
         try {
             UserEntity user = authService.getAuthenticatedUser();
-            AuthService.validateAdminAccess(user);
+            AuthService.validateGuestAccess(user);
             List<DocumentEntity> userFiles = documentRepository.findAll();
 
             return ResponseEntity.ok(userFiles);
@@ -183,7 +185,7 @@ public class FileService {
         try {
             UserEntity user = authService.getAuthenticatedUser();
             DocumentEntity document = findDocumentById(id);
-            AuthService.validateUserAccess(user, document.getCustomerEmail());
+            AuthService.validateGuestAccess(user);
 
             GridFsResource resource = fileStorageService.getFile(document.getLatestVersion().getFileId());
 
@@ -237,7 +239,7 @@ public class FileService {
         try {
             UserEntity user = authService.getAuthenticatedUser();
             DocumentEntity document = findDocumentById(documentId);
-            AuthService.validateUserAccess(user, document.getCustomerEmail());
+            AuthService.validateGuestAccess(user);
 
             FileVersion version = document.getVersionByIndex(versionIndex);
             if (version == null) {
@@ -328,17 +330,14 @@ public class FileService {
             return "";
         }
 
-        // Expressão regular para garantir que a extensão seja válida
-        String regex = ".*\\.([a-zA-Z0-9]{2,4})$";  // A extensão deve ter entre 2 e 4 caracteres alfanuméricos
+        String regex = ".*\\.([a-zA-Z0-9]{2,4})$";
 
-        // Verificando se o nome do arquivo corresponde ao padrão
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(fileName);
 
         if (matcher.find()) {
             String extension = matcher.group(1).toLowerCase();
 
-            // Verificar se a extensão é válida
             if (VALID_EXTENSIONS.contains(extension)) {
                 return extension;
             } else {
@@ -346,7 +345,6 @@ public class FileService {
             }
         }
 
-        // Se não houver correspondência, retorna uma string vazia
         return "";
     }
 
@@ -362,7 +360,7 @@ public class FileService {
             case "txt" -> "text/plain";
             case "doc" -> "application/msword";
             case "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-            default -> "application/octet-stream"; // Default type if no match
+            default -> "application/octet-stream";
         };
     }
 

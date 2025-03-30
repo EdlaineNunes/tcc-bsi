@@ -4,9 +4,7 @@ import com.tcc.edlaine.crosscutting.exceptions.general.UnprocessableEntityErrorE
 import com.tcc.edlaine.crosscutting.exceptions.general.UserDuplicatedKeyException;
 import com.tcc.edlaine.crosscutting.exceptions.user.UserBadRequest;
 import com.tcc.edlaine.crosscutting.exceptions.user.UserNotFound;
-import com.tcc.edlaine.crosscutting.exceptions.user.UserUnauthorized;
 import com.tcc.edlaine.domain.entities.UserEntity;
-import com.tcc.edlaine.domain.enums.PermissionLevel;
 import com.tcc.edlaine.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @Service
@@ -61,11 +58,12 @@ public class UserService {
     public ResponseEntity<UserEntity> updateUser(String id, UserEntity userEntity) {
         try{
             UserEntity user = authService.getAuthenticatedUser();
-            AuthService.validateAdminAccess(user);
             UserEntity existingUser = getUserById(id).getBody();
             if(existingUser == null){
                 throw new UserNotFound("user not found");
             }
+
+            AuthService.validateAdminAccessOrOwnerData(user, existingUser.getEmail());
 
             existingUser.setUsername(userEntity.getUsername());
             existingUser.setCpf(userEntity.getCpf());
@@ -85,12 +83,11 @@ public class UserService {
         try{
             UserEntity user = authService.getAuthenticatedUser();
             UserEntity existingUser = getUserById(id).getBody();
-            assert existingUser != null;
-
-            if(!Objects.equals(user.getId(), existingUser.getId())
-                    && user.getPermissionLevel().getLevel() < PermissionLevel.ADMIN.getLevel()){
-                throw new UserUnauthorized();
+            if(existingUser == null){
+                throw new UserNotFound("user not found");
             }
+
+            AuthService.validateAdminAccessOrOwnerData(user, existingUser.getEmail());
 
             existingUser.setPassword(authService.encriptPassword(password));
             userRepository.save(existingUser);
