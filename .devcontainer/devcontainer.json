@@ -6,5 +6,5 @@
       "visibility": "public"
     }
   },
-  "postCreateCommand": "bash -c 'curl -s \"https://get.sdkman.io\" | bash && source $HOME/.sdkman/bin/sdkman-init.sh && sdk install java 17.0.8-tem && sdk default java 17.0.8-tem && echo \"export JAVA_HOME=$HOME/.sdkman/candidates/java/current\" >> $HOME/.bashrc && echo \"export PATH=\\$JAVA_HOME/bin:\\$PATH\" >> $HOME/.bashrc'"
+  "postCreateCommand": "sudo apt update && sudo apt install -y openjdk-17-jdk && echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> ~/.bashrc && echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc"
 }
