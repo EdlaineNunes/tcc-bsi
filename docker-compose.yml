@@ -22,7 +22,7 @@ services:
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://admin:admin123@mongodb:27017/edlaine_tcc_nucleo?authSource=admin
     ports:
-      - "8080:8080"  =
+      - "8080:8080"
 
 volumes:
   mongodb_data:
