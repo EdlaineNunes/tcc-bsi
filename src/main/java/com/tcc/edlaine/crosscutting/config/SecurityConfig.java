@@ -4,6 +4,7 @@ import com.tcc.edlaine.crosscutting.utils.JwtAuthenticationFilter;
 import com.tcc.edlaine.crosscutting.utils.JwtTokenProvider;
 import com.tcc.edlaine.service.MyUserDetailsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,6 +31,8 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final MyUserDetailsService myUserDetailsService;
+    @Value("${custom.url.front}")
+    private String frontUrl;
 
     @Bean
     public WebMvcConfigurer corsConfigurer() {
@@ -37,7 +40,7 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:3000") // Ajuste conforme necessário
+                        .allowedOrigins(frontUrl)
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
@@ -78,7 +81,7 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource( request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of("http://localhost:3000"));
+                    config.setAllowedOrigins(List.of(frontUrl));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true);

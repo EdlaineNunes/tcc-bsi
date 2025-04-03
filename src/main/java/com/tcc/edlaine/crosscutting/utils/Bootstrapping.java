@@ -31,6 +31,7 @@ public class Bootstrapping implements CommandLineRunner {
                 new UserEntity("Edlaine Nunes", "11111111111", "edlaine.nunesr@gmail.com", authService.encriptPassword( "edlaine123"), PermissionLevel.SUPER_ADMIN, true),
                 new UserEntity("Felipe Mota", "12345639586", "felipe@gmail.com", authService.encriptPassword("felipe"), PermissionLevel.SUPER_ADMIN, true),
                 new UserEntity("Cleaine Oliveira", "86354968752", "cleiane@gmail.com", authService.encriptPassword("cleiane"), PermissionLevel.SUPER_ADMIN, true),
+                new UserEntity("Giuliano Viana", "56398426896", "giuliano@gmail.com", authService.encriptPassword("giuliano"), PermissionLevel.SUPER_ADMIN, true),
                 new UserEntity("Avaliador", "68935742956", "avaliador@gmail.com", authService.encriptPassword("avaliador"), PermissionLevel.SUPER_ADMIN, true),
 
                 new UserEntity("User Super Admin", "22222222222", "super.admin@gmail.com", authService.encriptPassword("edlaine123"), PermissionLevel.SUPER_ADMIN, true),
