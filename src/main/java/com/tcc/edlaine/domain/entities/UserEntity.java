@@ -26,4 +26,18 @@ public class UserEntity {
     private String password;
     private PermissionLevel permissionLevel;
     private boolean active;
+
+    public UserEntity(String username,
+                      String cpf,
+                      String email,
+                      String password,
+                      PermissionLevel permissionLevel,
+                      boolean active) {
+        this.username = username;
+        this.cpf = cpf;
+        this.email = email;
+        this.password = password;
+        this.permissionLevel = permissionLevel;
+        this.active = active;
+    }
 }
