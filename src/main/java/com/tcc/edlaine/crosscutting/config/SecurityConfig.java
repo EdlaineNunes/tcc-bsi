@@ -86,13 +86,11 @@ public class SecurityConfig {
                 }))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/auth/**").permitAll()  // Permite acesso público para login
-                                .requestMatchers("/auth/register/**").permitAll()  // Permite acesso público para login
-                                .requestMatchers("/files/**").permitAll()  // Permite acesso público para login
-                                .requestMatchers("/users/**").permitAll()  // Permite acesso público para login
-//                        .requestMatchers("/files/**").authenticated()  // Requer autenticação para acessar arquivos
-//                        .requestMatchers("/users/**").hasRole("ADMIN")  // Admins só podem acessar os usuários
-                                .anyRequest().authenticated()  // Qualquer outra requisição precisa ser autenticada
+                                .requestMatchers("/auth/**").permitAll()
+                                .requestMatchers("/auth/register/**").permitAll()
+                                .requestMatchers("/files/**").permitAll()
+                                .requestMatchers("/users/**").permitAll()
+                                .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter(authenticationManager, jwtTokenProvider),
